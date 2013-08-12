@@ -55,6 +55,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       return "builtin";
     }
     if (atoms.propertyIsEnumerable(cur)) return "atom";
+    if (["class", "struct", "enum"].indexOf(state.prevToken) > -1) return "def"
     return "variable";
   }
 
@@ -89,6 +90,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     this.type = type;
     this.align = align;
     this.prev = prev;
+    this.prevToken = null;
   }
   function pushContext(state, col, type) {
     var indent = state.indented;
@@ -141,6 +143,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       else if (((ctx.type == "}" || ctx.type == "top") && curPunc != ';') || (ctx.type == "statement" && curPunc == "newstatement"))
         pushContext(state, stream.column(), "statement");
       state.startOfLine = false;
+      state.prevToken = stream.current();
       return style;
     },
 
