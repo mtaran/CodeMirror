@@ -44,7 +44,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       stream.eatWhile(isOperatorChar);
       return "operator";
     }
-    stream.eatWhile(/[\w\$_]/);
+    stream.match(/^([\w\$_]|::)+/);
     var cur = stream.current();
     if (keywords.propertyIsEnumerable(cur)) {
       if (blockKeywords.propertyIsEnumerable(cur)) curPunc = "newstatement";
@@ -55,7 +55,10 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       return "builtin";
     }
     if (atoms.propertyIsEnumerable(cur)) return "atom";
-    if (["class", "struct", "enum"].indexOf(state.prevToken) > -1) return "def"
+    if (["class", "struct", "enum"].indexOf(state.prevToken) > -1 
+       || stream.match(/(\s*[\(])/, false) // Followed by ( or ;.
+        )
+      return "def"
     return "variable";
   }
 
@@ -91,6 +94,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     this.align = align;
     this.prev = prev;
     this.prevToken = null;
+    this.maybeDef = true;
   }
   function pushContext(state, col, type) {
     var indent = state.indented;
@@ -103,6 +107,10 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     if (t == ")" || t == "]" || t == "}")
       state.indented = state.context.indented;
     return state.context = state.context.prev;
+  }
+  // Returns whether classes and functions can be defined in this context.
+  function defAllowed(context) {
+    return context.type == "top" || context.type == "top-statement";
   }
 
   // Interface
@@ -130,17 +138,68 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       if (style == "comment" || style == "meta") return style;
       if (ctx.align == null) ctx.align = true;
 
-      if ((curPunc == ";" || curPunc == ":" || curPunc == ",") && ctx.type == "statement") popContext(state);
-      else if (curPunc == "{") pushContext(state, stream.column(), "}");
-      else if (curPunc == "[") pushContext(state, stream.column(), "]");
-      else if (curPunc == "(") pushContext(state, stream.column(), ")");
+      // // Push or pop the context according to whether we're going into a new
+      // // scope, array or set of parentheses.
+      // if (/;:,/.test(curPunc) && ctx.type == "statement") {
+      //   popContext(state);
+      // // } else if (curPunc == "{" && state.isClassDef) {
+      // //   pushContext(state, stream.column(), "class");
+      // } else if (curPunc == "{") {
+      //         pushContext(state, stream.column(), "}");
+      // } else if (curPunc == "[") {
+      //   pushContext(state, stream.column(), "]");
+      // } else if (curPunc == "(") {
+      //   pushContext(state, stream.column(), ")");
+      // } else if (curPunc == "}") {
+      //   while (ctx.type == "statement")
+      //     ctx = popContext(state);
+      //   if (ctx.type == "}")
+      //     ctx = popContext(state);
+      //   while (ctx.type == "statement") {
+      //     ctx = popContext(state);
+      // } else if (curPunc == ctx.type) {
+      //   popContext(state);
+      // } else if (ctx.type == "statement" && curPunc == "newstatement") {
+      //   // At keywords that start a new scope, like 'if', 'for', 'switch', etc.
+      //   pushContext(state, stream.column(), "statement");
+      // // } else if (ctx.type == "startclass") {
+      // } else if ((ctx.type == "}" || ctx.type == "top") && curPunc != ';') {
+      //   // At ???
+      //   pushContext(state, stream.column(), "statement");
+      // }
+      // state.startOfLine = false;
+
+      // var current = stream.current();
+      // state.prevToken = current;
+      // if (current == "class" || current == "enum" || current == "struct") {
+      //   state.isClassDef = true;
+      // }
+      // if (curPunc == "=" || current == "else" || current == "new") state.maybeDef = false;
+      // return style;
+
+      // Push or pop the context according to whether we're going into a new
+      // scope, array or set of parentheses.
+      if (/;:,/.test(curPunc) && ctx.type == "statement") 
+        popContext(state);
+      else if (curPunc == "{") 
+        pushContext(state, stream.column(), "}");
+      else if (curPunc == "[") 
+        pushContext(state, stream.column(), "]");
+      else if (curPunc == "(") 
+        pushContext(state, stream.column(), ")");
       else if (curPunc == "}") {
-        while (ctx.type == "statement") ctx = popContext(state);
-        if (ctx.type == "}") ctx = popContext(state);
-        while (ctx.type == "statement") ctx = popContext(state);
+        while (ctx.type == "statement") 
+          ctx = popContext(state);
+        if (ctx.type == "}") 
+          ctx = popContext(state);
+        while (ctx.type == "statement") 
+          ctx = popContext(state);
       }
-      else if (curPunc == ctx.type) popContext(state);
-      else if (((ctx.type == "}" || ctx.type == "top") && curPunc != ';') || (ctx.type == "statement" && curPunc == "newstatement"))
+      else if (curPunc == ctx.type) 
+        popContext(state);
+      else if (((ctx.type == "}" || ctx.type == "top") && curPunc != ';'))
+        pushContext(state, stream.column(), "statement");
+      else if (ctx.type == "statement" && curPunc == "newstatement")
         pushContext(state, stream.column(), "statement");
       state.startOfLine = false;
       state.prevToken = stream.current();
