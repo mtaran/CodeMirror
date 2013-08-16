@@ -205,7 +205,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     }
     var state = cx.state;
     if (state.context) {
-      cx.marked = "def";
+      cx.marked = "variable-2";
       if (inList(state.localVars)) return;
       state.localVars = {name: varname, next: state.localVars};
     } else {
@@ -319,12 +319,21 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     return pass(maybeoperatorComma, expect(";"), poplex);
   }
   function property(type) {
-    if (type == "variable") {cx.marked = "property"; return cont();}
+    if (type == "variable") {
+      // Marks the function/method being defined with cm-def.
+      if (cx.stream.match(/^\s*=\s*function\s*\(/, false)) {
+        cx.marked = "def";
+        return cont();
+      }
+      cx.marked = "property"; return cont();
+    }
   }
   function objprop(type, value) {
     if (type == "variable") {
       cx.marked = "property";
       if (value == "get" || value == "set") return cont(getterSetter);
+      // Marks the function/method being defined with cm-def.
+      if (cx.stream.match(/^\s*:\s*function\s*\(/, false)) cx.marked = "def";
     } else if (type == "number" || type == "string") {
       cx.marked = type + " property";
     }
@@ -396,7 +405,12 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     if (type != ")") cont(expression);
   }
   function functiondef(type, value) {
-    if (type == "variable") {register(value); return cont(functiondef);}
+    if (type == "variable") {
+      register(value); 
+      // Marks the function/method being defined with cm-def.
+      cx.marked = "def"; 
+      return cont(functiondef);
+    }
     if (type == "(") return cont(pushlex(")"), pushcontext, commasep(funarg, ")"), poplex, statement, popcontext);
   }
   function funarg(type, value) {
