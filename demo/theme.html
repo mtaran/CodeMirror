@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="../theme/paraiso-light.css">
 <link rel="stylesheet" href="../theme/rubyblue.css">
 <link rel="stylesheet" href="../theme/solarized.css">
+<link rel="stylesheet" href="../theme/the-matrix.css">
 <link rel="stylesheet" href="../theme/tomorrow-night-eighties.css">
 <link rel="stylesheet" href="../theme/twilight.css">
 <link rel="stylesheet" href="../theme/vibrant-ink.css">
@@ -32,6 +33,8 @@
 <script src="../lib/codemirror.js"></script>
 <script src="../mode/javascript/javascript.js"></script>
 <script src="../keymap/extra.js"></script>
+<script src="../addon/selection/active-line.js"></script>
+<script src="../addon/edit/matchbrackets.js"></script>
 <style type="text/css">
       .CodeMirror {border: 1px solid black; font-size:13px}
     </style>
@@ -86,6 +89,7 @@ function findSequence(goal) {
     <option>rubyblue</option>
     <option>solarized dark</option>
     <option>solarized light</option>
+    <option>the-matrix</option>
     <option>tomorrow-night-eighties</option>
     <option>twilight</option>
     <option>vibrant-ink</option>
@@ -96,7 +100,9 @@ function findSequence(goal) {
 
 <script>
   var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
-    lineNumbers: true
+    lineNumbers: true,
+    styleActiveLine: true,
+    matchBrackets: true
   });
   var input = document.getElementById("select");
   function selectTheme() {
