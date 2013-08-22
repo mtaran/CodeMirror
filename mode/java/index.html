@@ -1,0 +1,76 @@
+<!doctype html>
+
+<title>CodeMirror: Java mode</title>
+<meta charset="utf-8"/>
+<link rel=stylesheet href="../../doc/docs.css">
+
+<link rel="stylesheet" href="../../lib/codemirror.css">
+<script src="../../lib/codemirror.js"></script>
+<script src="../../addon/edit/matchbrackets.js"></script>
+<script src="java.js"></script>
+<style>.CodeMirror {border: 2px inset #dee;}</style>
+<div id=nav>
+  <a href="http://codemirror.net"><img id=logo src="../../doc/logo.png"></a>
+  <ul>
+    <li><a href="../../index.html">Home</a>
+    <li><a href="../../doc/manual.html">Manual</a>
+    <li><a href="https://github.com/marijnh/codemirror">Code</a>
+  </ul>
+  <ul>
+    <li><a href="../index.html">Language modes</a>
+    <li><a class=active href="#">C-like</a>
+  </ul>
+</div>
+
+<article>
+<h2>Java mode</h2>
+
+<div><textarea id="java-code">
+import com.demo.util.MyType;
+import com.demo.util.MyInterface;
+
+public enum Enum {
+  VAL1, VAL2, VAL3
+}
+
+public class Class<T, V> implements MyInterface {
+  public static final MyType<T, V> member;
+
+  private class InnerClass {
+    public int zero() {
+      return 0;
+    }
+  }
+
+  @Override
+  public MyType method() {
+    return member;
+  }
+
+  public void method2(MyType<T, V> value) {
+    method();
+    value.method3();
+    member = value;
+  }
+}
+</textarea></div>
+
+<script>
+  var javaEditor = CodeMirror.fromTextArea(document.getElementById("java-code"), {
+    lineNumbers: true,
+    matchBrackets: true,
+    mode: "text/x-java"
+  });
+</script>
+
+<p>Simple mode that tries to handle C-like languages as well as it
+can. Takes two configuration parameters: <code>keywords</code>, an
+object whose property names are the keywords in the language,
+and <code>useCPP</code>, which determines whether C preprocessor
+directives are recognized.</p>
+
+<p><strong>MIME types defined:</strong> <code>text/x-csrc</code>
+(C code), <code>text/x-c++src</code> (C++
+code), <code>text/x-java</code> (Java
+code), <code>text/x-csharp</code> (C#).</p>
+</article>
