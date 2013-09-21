@@ -1340,6 +1340,7 @@ testCM("atomicMarker", function(cm) {
   eqPos(cm.getCursor(), Pos(8, 3));
   m.clear();
   m = atom(1, 1, 3, 8);
+  cm.setCursor(Pos(0, 0));
   cm.setCursor(Pos(2, 0));
   eqPos(cm.getCursor(), Pos(3, 8));
   cm.execCommand("goCharLeft");
@@ -1538,3 +1539,22 @@ testCM("change_removedText", function(cm) {
   eq(removedText[0].join("\n"), "abc\nd");
   eq(removedText[1].join("\n"), "");
 });
+
+testCM("lineStyleFromMode", function(cm) {
+  CodeMirror.defineMode("test_mode", function() {
+    return {token: function(stream) {
+      if (stream.match(/^\[[^\]]*\]/)) return "line-brackets";
+      if (stream.match(/^\([^\]]*\)/)) return "line-background-parens";
+      stream.match(/^\s+|^\S+/);
+    }};
+  });
+  cm.setOption("mode", "test_mode");
+  var bracketElts = byClassName(cm.getWrapperElement(), "brackets");
+  eq(bracketElts.length, 1);
+  eq(bracketElts[0].nodeName, "PRE");
+  is(!/brackets.*brackets/.test(bracketElts[0].className));
+  var parenElts = byClassName(cm.getWrapperElement(), "parens");
+  eq(parenElts.length, 1);
+  eq(parenElts[0].nodeName, "DIV");
+  is(!/parens.*parens/.test(parenElts[0].className));
+}, {value: "line1: [br] [br]\nline2: (par) (par)\nline3: nothing"});
